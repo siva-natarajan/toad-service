@@ -28,21 +28,36 @@ jobs:
         run: |
           aws ecs describe-task-definition --task-definition my-first-task --query taskDefinition --region us-east-1 > task-definition.json
       - name: Get PR number
-        id: pr-num
-        run: |
-          echo "::set-env name=PR_NUMBER::$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")"
+        uses: actions/github-script@v6
+        id: get_issue_number
+        with:
+          script: |
+            if (context.issue.number) {
+              // Return issue number if present
+              return context.issue.number;
+            } else {
+              // Otherwise return issue number from commit
+              return (
+                await github.rest.repos.listPullRequestsAssociatedWithCommit({
+                  commit_sha: context.sha,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                })
+              ).data[0].number;
+            }
+          result-encoding: string
       - name: Fill in the new image ID in the Amazon ECS task definition
         id: task-def
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: froggy-ecr-repo
           # IMAGE_TAG: ${{ inputs.IMAGE_TAG }}
-          # IMAGE_TAG: ${{ steps.pr-num.outputs.PR_NUMBER }}
+          IMAGE_TAG: ${{steps.get_issue_number.outputs.result}}
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: task-definition.json
           container-name: my-first-task
-          image: ${{env.ECR_REGISTRY}}/${{env.ECR_REPOSITORY}}:${{env.PR_NUMBER}}
+          image: ${{env.ECR_REGISTRY}}/${{env.ECR_REPOSITORY}}:${{env.IMAGE_TAG}}
       - name: Deploy Amazon ECS task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
