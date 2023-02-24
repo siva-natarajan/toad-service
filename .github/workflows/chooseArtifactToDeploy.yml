@@ -5,7 +5,7 @@ on:
   #   branches: [main]
   workflow_dispatch:
     inputs:
-      tags:
+      IMAGE_TAG:
         description: "IMAGE_TAG"
         required: true
         type: string
