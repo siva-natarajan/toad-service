@@ -33,7 +33,7 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: froggy-ecr-repo
           # IMAGE_TAG: ${{ inputs.IMAGE_TAG }}
-          IMAGE_TAG: ${{ github.event.number }}
+          IMAGE_TAG: ${{ github.event.pull_request.number }}
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: task-definition.json
