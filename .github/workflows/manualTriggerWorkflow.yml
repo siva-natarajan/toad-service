@@ -1,3 +1,5 @@
+name: Manual Trigger workflow
+
 on:
   workflow_dispatch:
     inputs:
@@ -18,10 +20,6 @@ on:
         description: "Test scenario tags"
         required: true
         type: string
-      environment:
-        description: "Environment to run tests against"
-        type: environment
-        required: true
 
 jobs:
   print-tag:
