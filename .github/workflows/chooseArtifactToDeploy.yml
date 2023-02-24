@@ -4,11 +4,11 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
-    # inputs:
-    #   IMAGE_TAG:
-    #     description: "IMAGE_TAG"
-    #     required: true
-    #     type: string
+    inputs:
+      IMAGE_TAG:
+        description: "IMAGE_TAG"
+        required: true
+        type: string
 
 jobs:
   deploy:
@@ -30,19 +30,19 @@ jobs:
       - name: Get PR number
         id: pr-num
         run: |
-          echo "PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")" >> $GITHUB_OUTPUT
+          echo "::set-env name=PR_NUMBER::$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")"
       - name: Fill in the new image ID in the Amazon ECS task definition
         id: task-def
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: froggy-ecr-repo
           # IMAGE_TAG: ${{ inputs.IMAGE_TAG }}
-          IMAGE_TAG: ${{ steps.pr-num.outputs.PR_NUMBER }}
+          # IMAGE_TAG: ${{ steps.pr-num.outputs.PR_NUMBER }}
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: task-definition.json
           container-name: my-first-task
-          image: ${{env.ECR_REGISTRY}}/${{env.ECR_REPOSITORY}}:${{env.IMAGE_TAG}}
+          image: ${{env.ECR_REGISTRY}}/${{env.ECR_REPOSITORY}}:${{env.PR_NUMBER}}
       - name: Deploy Amazon ECS task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
